@@ -1,4 +1,6 @@
 # quantum-benchmark
+For manual, refer to http://aces.snu.ac.kr/software/snuqs/.
+
 - QFT (forward, inverse)
 - Grover’s Search
 - Quantum teleportation
