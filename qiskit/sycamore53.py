@@ -3,6 +3,7 @@ import numpy as np
 from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit import Parameter, Gate
 from qiskit.circuit.library import Diagonal, iSwapGate, CU1Gate
+from qiskit.extensions import UnitaryGate
 
 def sw(circ, q):
 	circ.unitary(np.sqrt(0.5)*np.array([0, 1-1J, 1+1J, 0]).reshape(2,2), q, label='sw')
@@ -14,28 +15,15 @@ def sy(circ, q):
 	circ.ry(np.pi/2, q)
 
 def fsim(p0, p1, circ, q0, q1):
-	theta= Parameter('theta')
-	phi= Parameter('phi')
+	mat = np.zeros((4, 4), dtype=np.complex_)
+	mat[0][0] = 1
+	mat[1][1] = np.cos(p0)
+	mat[1][2] = -np.sin(p0)*1J
+	mat[2][1] = -np.sin(p0)*1J
+	mat[2][2] = np.cos(p0)
+	mat[3][3] = np.cos(p1) + -np.sin(p1)*1J
 
-	name = 'fsim({},{}'.format(p0, p1)
-	iswap = iSwapGate() ** (-2*theta/np.pi)
-	
-	i^{t} = x
-	exp(i*theta)
-
-	log(i) = log(x^{1/t})
-	x^{1/t} = i
-
-	cu1 = CU1Gate(-phi)
-
-	circ.append(iswap, [q0, q1])
-	circ.append(cu1, [q0, q1])
-#	circ.unitary(np.array([
-#				1, 0, 0, 0,
-#				0, np.cos(p0), -1J*np.sin(p0), 0,
-#				0, -1J*np.sin(p0), np.cos(p0), 0,
-#				0, 0, 0, np.exp(-1J*p1)
-#	]).reshape(4,4), [q0, q1], label=name)
+	circ.append(UnitaryGate(mat, label='fsim({}, {})'.format(p0, p1)), [q0, q1]);
 
 def rz(p, circ, q):
 	circ.u1(p, q)
@@ -743,4 +731,5 @@ def sycamore53():
 	return circ
 
 if __name__ == "__main__":
+	sycamore53()
 	print(sycamore53().qasm())
