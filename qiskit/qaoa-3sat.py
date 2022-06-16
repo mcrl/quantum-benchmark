@@ -1,35 +1,33 @@
+import networkx as nx
 import numpy as np
 import time
 from qiskit import QuantumCircuit, QuantumRegister
+from qiskit.circuit import Parameter
 from qiskit.circuit.library import Diagonal
 
 
-def linear_vqe(num_qubits, depth):
+def qaoa_maxcut(num_qubits, formula):
 	circ = QuantumCircuit(num_qubits)
 
-	for d in range(depth):
-		for q in range(num_qubits):
-			circ.ry(np.random.rand() * 2 * np.pi, q)
-			circ.rz(np.random.rand() * 2 * np.pi, q)
+	for i in range(num_qubits):
+		circ.h(i)
 
-		for q in range(0, num_qubits-1):
-			circ.cx(q, q+1)
+	alpha = Parameter("$\\alpha$")
+	for i in range(num_qubits):
+		circ.rx(2 * alpha, i)
+	circ.barrier()
 
-		circ.barrier()
-	return circ
+	beta = Parameter("$\\beta$")
+	for i in range(num_qubits):
+		circ.rx(-2 * beta, i)
+	circ.barrier()
 
-def full_vqe(num_qubits, depth):
-	circ = QuantumCircuit(num_qubits)
-
-	for d in range(depth):
-		for q in range(num_qubits):
-			circ.ry(np.random.rand() * 2 * np.pi, q)
-			circ.rz(np.random.rand() * 2 * np.pi, q)
-
-		for q in range(0, num_qubits-1):
-			for i in range(q+1, num_qubits):
-				circ.cx(q, i)
-		circ.barrier()
+	gamma = Parameter("$\\gamma$")
+	for a, b, c in list(formula):
+		circ.rzz(2 * gamma, a, b)
+		circ.rzz(2 * gamma, b, c)
+		circ.rzz(2 * gamma, a, c)
+	circ.barrier()
 
 	return circ
 
@@ -41,11 +39,10 @@ def vqe(num_qubits, entanglement, depth):
 	
 
 if __name__ == "__main__":
-	num_qubits = 5
-	depth = 2
-	np.random.seed(12345)
-	print(vqe(num_qubits, 'linear', depth))
-	print(vqe(num_qubits, 'full', depth))
-
-	print(vqe(num_qubits, 'linear', depth).qasm())
-	print(vqe(num_qubits, 'full', depth).qasm())
+	num_qubits = 4
+	formula = [
+	(0, 1, 2),
+	(1, 2, 3),
+	(0, 1, 3)
+	]
+	print(qaoa_maxcut(num_qubits, formula))
